@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RobotSumo.Core
+﻿namespace RobotSumo.Core
 {
     public interface IRobot
     {

@@ -1,4 +1,5 @@
 ﻿using System;
+
 using RobotSumo.Core.Sensors;
 
 namespace RobotSumo.Core
@@ -7,6 +8,11 @@ namespace RobotSumo.Core
     {
         public class State
         {
+            public InfraRedSensorReadEnum FrontInfraSensor { get; set; }
+            public InfraRedSensorReadEnum BackInfraSensor { get; set; }
+            public UltraSonicSensorReadEnum UltraSonicSensor { get; set; }
+            public Action<Robot> Action { get; set; }
+
             public State(InfraRedSensorReadEnum frontInfraSensor,
                 InfraRedSensorReadEnum backInfraSensor,
                 UltraSonicSensorReadEnum ultraSonicSensor,
@@ -25,10 +31,6 @@ namespace RobotSumo.Core
                 &&
                 robot.UltrasonicSensor.Read() == UltraSonicSensor;
 
-            public InfraRedSensorReadEnum FrontInfraSensor { get; set; }
-            public InfraRedSensorReadEnum BackInfraSensor { get; set; }
-            public UltraSonicSensorReadEnum UltraSonicSensor { get; set; }
-            public Action<Robot> Action { get; set; }
         }
     }
 }

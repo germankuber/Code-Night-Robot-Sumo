@@ -1,41 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-
 using RobotSumo.Core.Sensors;
 
-using static RobotSumo.Core.Sensors.InfraRedSensorReadEnum;
-using static RobotSumo.Core.Sensors.UltraSonicSensorReadEnum;
 namespace RobotSumo.Core
 {
-    public class Drivers
-    {
-        public Drivers(IInfraRedSensorDriver infraRedSensorDriverFront, IInfraRedSensorDriver infraRedSensorDriverBack, IUltraSonicSensorDriver ultraSonicSensorDriver)
-        {
-            InfraRedSensorDriverFront = infraRedSensorDriverFront;
-            InfraRedSensorDriverBack = infraRedSensorDriverBack;
-            UltraSonicSensorDriver = ultraSonicSensorDriver;
-        }
-
-        public IInfraRedSensorDriver InfraRedSensorDriverFront { get; private set; }
-        public IInfraRedSensorDriver InfraRedSensorDriverBack { get; private set; }
-        public IUltraSonicSensorDriver UltraSonicSensorDriver { get; private set; }
-    }
-
     public partial class Robot : IRobot
     {
-        private readonly List<State> _states = new List<State>
-        {
-            new State(Black, Black, Something, r => r.Attack()),
-            new State(Black, Black, Nothing, r => r.MoveFree()),
-            new State(White, Black, Something, r => r.NoAction()),
-            new State(White, Black, Nothing, r => r.ActionTwo()),
-            new State(Black, White, Something, r => r.NoAction()),
-            new State(Black, White, Nothing, r => r.ActionThree()),
-            new State(White, White, Something, r => r.NoAction()),
-            new State(White, White, Nothing, r => r.ActionFour())
-        };
-
         private readonly IMoveFree _moveFree;
         private readonly Action _noActionNotification;
         private readonly Action _actionNotification;
@@ -45,18 +14,23 @@ namespace RobotSumo.Core
         public InfraRedSensor FrontSensor { get; }
         public InfraRedSensor BackSensor { get; }
         public UltrasonicSensor UltrasonicSensor { get; }
-
+        private States States { get;  }
         public Robot(Drivers drivers,
             IMoveFree moveFree,
-            Action noActionNotification,
-            Action actionNotification)
+            CallbackActions callbackActions)
         {
             _moveFree = moveFree;
-            _noActionNotification = noActionNotification;
-            _actionNotification = actionNotification;
+            _noActionNotification = callbackActions.NoActionNotification;
+            _actionNotification = callbackActions.ActionNotification;
             UltrasonicSensor = new UltrasonicSensor(drivers.UltraSonicSensorDriver);
             FrontSensor = new InfraRedSensor(drivers.InfraRedSensorDriverFront);
             BackSensor = new InfraRedSensor(drivers.InfraRedSensorDriverBack);
+            States = RobotStateFactory.Create(Attack,
+                                              MoveFree,
+                                              ActionTwo,
+                                              ActionThree,
+                                              ActionFour,
+                                              NoAction);
         }
         public void MoveForward()
         {
@@ -124,7 +98,7 @@ namespace RobotSumo.Core
         private void NoAction() => _noActionNotification?.Invoke();
 
 
-        public void Do() => _states.Execute(this);
+        public void Do() => States.Execute(this);
     }
 }
 

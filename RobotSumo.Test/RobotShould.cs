@@ -19,13 +19,8 @@ namespace RobotSumo.Test
         void NoActionCallback() => calledNoAction = true;
         bool calledAction = false;
         void ActionCallback() => calledAction = true;
-        private Robot CreateRobotWithoutSensor() => new Robot(null, null, null, null, null, null);
-        private Robot CreateRobotWithSensor() => new Robot(_frontBackSensorMock.Object,
-            _backBackSensorMock.Object,
-            _moveFreeMock.Object,
-            _ultraSonicSensorDriverMock.Object,
-            NoActionCallback,
-            ActionCallback);
+        private Robot CreateRobotWithoutSensor() => new Robot(new Drivers(null, null, null), null, new CallbackActions(null, null));
+        private Robot CreateRobotWithSensor() => new Robot(new Drivers(_frontBackSensorMock.Object, _backBackSensorMock.Object, _ultraSonicSensorDriverMock.Object), _moveFreeMock.Object, new CallbackActions(NoActionCallback, ActionCallback));
 
 
         [Fact]
