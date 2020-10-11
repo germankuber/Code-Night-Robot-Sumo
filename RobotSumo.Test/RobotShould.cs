@@ -1,8 +1,9 @@
-﻿using System;
-
-using FluentAssertions;
+﻿using FluentAssertions;
 
 using Moq;
+
+using RobotSumo.Core;
+using RobotSumo.Core.Sensors;
 
 using Xunit;
 
@@ -14,12 +15,41 @@ namespace RobotSumo.Test
         private readonly Mock<IInfraRedSensorDriver> _backBackSensorMock = new Mock<IInfraRedSensorDriver>();
         private readonly Mock<IUltraSonicSensorDriver> _ultraSonicSensorDriverMock = new Mock<IUltraSonicSensorDriver>();
         private readonly Mock<IMoveFree> _moveFreeMock = new Mock<IMoveFree>();
-        private Robot CreateRobotWithoutSensor() => new Robot(null, null, null, null);
+        bool calledNoAction = false;
+        void NoActionCallback() => calledNoAction = true;
+        bool calledAction = false;
+        void ActionCallback() => calledAction = true;
+        private Robot CreateRobotWithoutSensor() => new Robot(null, null, null, null, null, null);
         private Robot CreateRobotWithSensor() => new Robot(_frontBackSensorMock.Object,
             _backBackSensorMock.Object,
             _moveFreeMock.Object,
-            _ultraSonicSensorDriverMock.Object);
+            _ultraSonicSensorDriverMock.Object,
+            NoActionCallback,
+            ActionCallback);
 
+
+        [Fact]
+        public void Do()
+        {
+            _backBackSensorMock.Setup(x => x.Read()).Returns(InfraRedSensorReadEnum.White);
+            _frontBackSensorMock.Setup(x => x.Read()).Returns(InfraRedSensorReadEnum.White);
+            _ultraSonicSensorDriverMock.Setup(x => x.Read()).Returns(UltraSonicSensorReadEnum.Something);
+
+            var robot = CreateRobotWithSensor();
+            robot.Do();
+            calledNoAction.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Lost_Game()
+        {
+            _backBackSensorMock.Setup(x => x.Read()).Returns(InfraRedSensorReadEnum.White);
+            _frontBackSensorMock.Setup(x => x.Read()).Returns(InfraRedSensorReadEnum.White);
+            _ultraSonicSensorDriverMock.Setup(x => x.Read()).Returns(UltraSonicSensorReadEnum.Something);
+            var robot = CreateRobotWithSensor();
+            robot.Do();
+            calledNoAction.Should().BeTrue();
+        }
 
         [Fact]
         public void Execute_Move_Free_If_Back_Black_And_Front_Black()
@@ -29,7 +59,7 @@ namespace RobotSumo.Test
             _ultraSonicSensorDriverMock.Setup(x => x.Read()).Returns(UltraSonicSensorReadEnum.Nothing);
 
             var robot = CreateRobotWithSensor();
-            robot.Start();
+            robot.Do();
 
             _moveFreeMock.Verify(x => x.Move(It.IsAny<Robot>()));
         }
@@ -41,7 +71,7 @@ namespace RobotSumo.Test
             _ultraSonicSensorDriverMock.Setup(x => x.Read()).Returns(UltraSonicSensorReadEnum.Something);
 
             var robot = CreateRobotWithSensor();
-            robot.Start();
+            robot.Do();
 
             robot.RightWheel.State.Should().Be(WheelState.MaxMove);
             robot.LeftWheel.State.Should().Be(WheelState.MaxMove);
@@ -54,7 +84,7 @@ namespace RobotSumo.Test
             _frontBackSensorMock.Setup(x => x.Read()).Returns(InfraRedSensorReadEnum.White);
             _ultraSonicSensorDriverMock.Setup(x => x.Read()).Returns(UltraSonicSensorReadEnum.Nothing);
             var robot = CreateRobotWithSensor();
-            robot.Start();
+            robot.Do();
             robot.RightWheel.State.Should().Be(WheelState.Back);
             robot.LeftWheel.State.Should().Be(WheelState.Back);
         }
@@ -67,7 +97,7 @@ namespace RobotSumo.Test
             _ultraSonicSensorDriverMock.Setup(x => x.Read()).Returns(UltraSonicSensorReadEnum.Nothing);
 
             var robot = CreateRobotWithSensor();
-            robot.Start();
+            robot.Do();
             robot.RightWheel.State.Should().Be(WheelState.Move);
             robot.LeftWheel.State.Should().Be(WheelState.Move);
         }
@@ -81,20 +111,7 @@ namespace RobotSumo.Test
             _ultraSonicSensorDriverMock.Setup(x => x.Read()).Returns(UltraSonicSensorReadEnum.Nothing);
 
             var robot = CreateRobotWithSensor();
-            robot.Start();
-            robot.RightWheel.State.Should().Be(WheelState.Move);
-            robot.LeftWheel.State.Should().Be(WheelState.Move);
-        }
-
-        [Fact]
-        public void Execute_NoAction_If_Back_White_And_Front_White()
-        {
-            _backBackSensorMock.Setup(x => x.Read()).Returns(InfraRedSensorReadEnum.White);
-            _frontBackSensorMock.Setup(x => x.Read()).Returns(InfraRedSensorReadEnum.White);
-            _ultraSonicSensorDriverMock.Setup(x => x.Read()).Returns(UltraSonicSensorReadEnum.Something);
-
-            var robot = CreateRobotWithSensor();
-            robot.Start();
+            robot.Do();
             robot.RightWheel.State.Should().Be(WheelState.Move);
             robot.LeftWheel.State.Should().Be(WheelState.Move);
         }

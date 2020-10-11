@@ -1,4 +1,4 @@
-namespace RobotSumo.Test
+namespace RobotSumo.Core
 {
     public class Wheel
     {

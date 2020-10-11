@@ -1,4 +1,4 @@
-namespace RobotSumo.Test
+namespace RobotSumo.Core.Sensors
 {
     public class InfraRedSensor
     {
